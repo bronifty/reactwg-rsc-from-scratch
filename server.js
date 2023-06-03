@@ -11,6 +11,7 @@ createServer(async (req, res) => {
   }
 
   try {
+    console.log("i fell through to ssr mode ");
     // send HTML to response for page Router determines by req.url
     await sendHTML(res, <Router url={url} />);
   } catch (err) {
