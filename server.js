@@ -5,6 +5,11 @@ import sanitizeFilename from "sanitize-filename";
 
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  if (url.pathname === "/client.js") {
+    sendScript(res, "./client.js");
+    return;
+  }
+
   try {
     // send HTML to response for page Router determines by req.url
     await sendHTML(res, <Router url={url} />);
@@ -14,6 +19,12 @@ createServer(async (req, res) => {
     res.end();
   }
 }).listen(8080);
+
+async function sendScript(res, filename) {
+  const content = await readFile(filename, "utf8");
+  res.writeHead(200, { "Content-Type": "text/javascript" });
+  res.end(content);
+}
 
 // control flow takes req.url and returns page
 function Router({ url }) {
@@ -89,7 +100,7 @@ function BlogLayout({ children }) {
 function Footer({ author }) {
   return (
     <footer>
-      {author} {new Date().getFullYear()}
+      {author} {new Date().getFullYear()}!
     </footer>
   );
 }
