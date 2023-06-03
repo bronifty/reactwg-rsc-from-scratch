@@ -93,7 +93,7 @@ function Footer({ author }) {
     </footer>
   );
 }
-
+// ...
 // adapter
 async function sendHTML(res, jsx) {
   const html = await renderJSXToHTML(jsx);
