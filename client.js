@@ -2,7 +2,7 @@ let currentPathname = window.location.pathname;
 
 async function navigate(pathname) {
   currentPathname = pathname;
-  console.log("pathname: ", pathname);
+
   // Fetch HTML for the route we're navigating to.
   const response = await fetch(pathname);
   const html = await response.text();

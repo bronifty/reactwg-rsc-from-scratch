@@ -5,6 +5,7 @@ import sanitizeFilename from "sanitize-filename";
 
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  console.log(url);
   if (url.pathname === "/client.js") {
     sendScript(res, "./client.js");
     return;
@@ -104,10 +105,20 @@ function Footer({ author }) {
     </footer>
   );
 }
-// ...
-// adapter
+
 async function sendHTML(res, jsx) {
-  const html = await renderJSXToHTML(jsx);
+  let body = await renderJSXToHTML(jsx);
+  let html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <script type="module" src="/client.js"></script>
+    </head>
+    <body>
+      ${body}
+    </body>
+  </html>
+  `;
   res.writeHead(200, { "Content-Type": "text/html" });
   res.end(html);
 }
