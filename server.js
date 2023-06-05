@@ -2,7 +2,7 @@ import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import escapeHtml from "escape-html";
 import sanitizeFilename from "sanitize-filename";
-
+const PORT = 8080;
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   console.log(url);
@@ -24,7 +24,7 @@ createServer(async (req, res) => {
     res.writeHead(err.statusCode ?? 500);
     res.end();
   }
-}).listen(8080);
+}).listen(PORT);
 
 async function sendScript(res, filename) {
   const content = await readFile(filename, "utf8");
@@ -174,40 +174,47 @@ async function renderJSXToClientJSX(jsx) {
   } else throw new Error("Not implemented");
 }
 
-// async function sendHTML(res, jsx) {
-//   let html = await renderJSXToHTML(jsx);
-//   html += `
-//     <script type="importmap">
-//       {
-//         "imports": {
-//           "react": "https://esm.sh/react@canary",
-//           "react-dom/client": "https://esm.sh/react-dom@canary/client"
-//         }
-//       }
-//     </script>
-//     <script type="module" src="/client.js"></script>
-//   `;
-//   console.log(html);
-//   res.writeHead(200, { "Content-Type": "text/html" });
-//   res.end(html);
-// }
-
 async function sendHTML(res, jsx) {
-  let body = await renderJSXToHTML(jsx);
-  let html = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <script type="module" src="/client.js"></script>
-    </head>
-    <body>
-      ${body}
-    </body>
-  </html>
+  let html = await renderJSXToHTML(jsx);
+
+  // Serialize the JSX payload after the HTML to avoid blocking paint:
+  const clientJSX = await renderJSXToClientJSX(jsx);
+  const clientJSXString = JSON.stringify(clientJSX, stringifyJSX, 2);
+  html += `<script>window.__INITIAL_CLIENT_JSX_STRING__ = `;
+  html += JSON.stringify(clientJSXString).replace(/</g, "\\u003c"); // Escape the string
+  html += `</script>`;
+  html += `
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@canary",
+          "react-dom/client": "https://esm.sh/react-dom@canary/client"
+        }
+      }
+    </script>
+    <script type="module" src="/client.js"></script>
   `;
+  console.log(html);
   res.writeHead(200, { "Content-Type": "text/html" });
   res.end(html);
 }
+
+// async function sendHTML(res, jsx) {
+//   let body = await renderJSXToHTML(jsx);
+//   let html = `
+//   <!DOCTYPE html>
+//   <html>
+//     <head>
+//       <script type="module" src="/client.js"></script>
+//     </head>
+//     <body>
+//       ${body}
+//     </body>
+//   </html>
+//   `;
+//   res.writeHead(200, { "Content-Type": "text/html" });
+//   res.end(html);
+// }
 
 // async vanilla render function (wait for async Component to fetch own data)
 async function renderJSXToHTML(jsx) {
