@@ -1,4 +1,7 @@
-import { hydrateRoot } from "react-dom/client";
+import ReactDOM, { hydrateRoot } from "https://esm.sh/react-dom@canary/client";
+// import React from "https://esm.sh/react@canary";
+// import { hydrateRoot } from "react-dom/client";
+let currentPathname = window.location.pathname;
 
 const root = hydrateRoot(document, getInitialClientJSX());
 
@@ -15,19 +18,33 @@ async function navigate(pathname) {
 }
 
 async function fetchClientJSX(pathname) {
-  // TODO: fetch and return the <html>...</html> client JSX tree for the next route
+  const response = await fetch(pathname + "?jsx");
+  const clientJSXString = await response.text();
+  const clientJSX = JSON.parse(clientJSXString, parseJSX);
+  return clientJSX;
 }
 
-let currentPathname = window.location.pathname;
-
-async function navigate(pathname) {
-  currentPathname = pathname;
-  const response = await fetch(pathname + "?jsx");
-  const jsonString = await response.text();
-  if (pathname === currentPathname) {
-    alert(jsonString);
+function parseJSX(key, value) {
+  if (value === "$RE") {
+    // This is our special marker we added on the server.
+    // Restore the Symbol to tell React that this is valid JSX.
+    return Symbol.for("react.element");
+  } else if (typeof value === "string" && value.startsWith("$$")) {
+    // This is a string starting with $. Remove the extra $ added by the server.
+    return value.slice(1);
+  } else {
+    return value;
   }
 }
+
+// async function navigate(pathname) {
+//   currentPathname = pathname;
+//   const response = await fetch(pathname + "?jsx");
+//   const jsonString = await response.text();
+//   if (pathname === currentPathname) {
+//     alert(jsonString);
+//   }
+// }
 
 // async function navigate(pathname) {
 //   currentPathname = pathname;
