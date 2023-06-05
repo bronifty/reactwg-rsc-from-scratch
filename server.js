@@ -15,8 +15,10 @@ createServer(async (req, res) => {
   try {
     if (url.searchParams.has("jsx")) {
       url.searchParams.delete("jsx");
+      // RSC (lives in window.__INITIAL_CLIENT_JSX_STRING__)
       await sendJSX(res, <Router url={url} />);
     } else {
+      // SSR (1st load)
       await sendHTML(res, <Router url={url} />);
     }
   } catch (err) {
@@ -174,6 +176,10 @@ async function renderJSXToClientJSX(jsx) {
   } else throw new Error("Not implemented");
 }
 
+// dual purpose SSR and client-side hydration
+// we could effectively rename it sendHTMLAndJSX
+// sends what is in the html variable to / endpoint on port server is serving
+// sends __INITIAL_CLIENT_JSX_STRING__ to the window
 async function sendHTML(res, jsx) {
   let html = await renderJSXToHTML(jsx);
 
@@ -194,7 +200,7 @@ async function sendHTML(res, jsx) {
     </script>
     <script type="module" src="/client.js"></script>
   `;
-  console.log(html);
+  // console.log(html);
   res.writeHead(200, { "Content-Type": "text/html" });
   res.end(html);
 }
@@ -226,7 +232,18 @@ async function renderJSXToHTML(jsx) {
     const childHtmls = await Promise.all(
       jsx.map((child) => renderJSXToHTML(child))
     );
-    return childHtmls.join("");
+    let html = "";
+    let wasTextNode = false;
+    let isTextNode = false;
+    for (let i = 0; i < jsx.length; i++) {
+      isTextNode = typeof jsx[i] === "string" || typeof jsx[i] === "number";
+      if (wasTextNode && isTextNode) {
+        html += "<!-- -->";
+      }
+      html += childHtmls[i];
+      wasTextNode = isTextNode;
+    }
+    return html;
   } else if (typeof jsx === "object") {
     if (jsx.$$typeof === Symbol.for("react.element")) {
       if (typeof jsx.type === "string") {
