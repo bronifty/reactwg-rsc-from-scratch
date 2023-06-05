@@ -1,6 +1,25 @@
+import { hydrateRoot } from "react-dom/client";
+
+const root = hydrateRoot(document, getInitialClientJSX());
+
+function getInitialClientJSX() {
+  // TODO: return the <html>...</html> client JSX tree mathching the initial HTML
+}
+
+async function navigate(pathname) {
+  currentPathname = pathname;
+  const clientJSX = await fetchClientJSX(pathname);
+  if (pathname === currentPathname) {
+    root.render(clientJSX);
+  }
+}
+
+async function fetchClientJSX(pathname) {
+  // TODO: fetch and return the <html>...</html> client JSX tree for the next route
+}
+
 let currentPathname = window.location.pathname;
 
-// instead of replacing the body directly, we are going to use a new navigation function that adds jsx search param for the server, which will control flow to a branch that renders JSX to client JSX, meaning, it makes all the server calls first, gets the data in JSX object format and sends it to the client as JSX instead of HTML string
 async function navigate(pathname) {
   currentPathname = pathname;
   const response = await fetch(pathname + "?jsx");
