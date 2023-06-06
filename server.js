@@ -181,11 +181,9 @@ async function renderJSXToClientJSX(jsx) {
 // sends what is in the html variable to / endpoint on port server is serving
 // sends __INITIAL_CLIENT_JSX_STRING__ to the window
 async function sendHTML(res, jsx) {
-  let html = await renderJSXToHTML(jsx);
-
-  // Serialize the JSX payload after the HTML to avoid blocking paint:
   const clientJSX = await renderJSXToClientJSX(jsx);
-  const clientJSXString = JSON.stringify(clientJSX, stringifyJSX, 2);
+  let html = await renderJSXToHTML(clientJSX);
+  const clientJSXString = JSON.stringify(clientJSX, stringifyJSX);
   html += `<script>window.__INITIAL_CLIENT_JSX_STRING__ = `;
   html += JSON.stringify(clientJSXString).replace(/</g, "\\u003c"); // Escape the string
   html += `</script>`;
