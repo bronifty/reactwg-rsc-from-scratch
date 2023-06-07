@@ -1,8 +1,7 @@
 import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import sanitizeFilename from "sanitize-filename";
-import { Fragment } from "react";
-
+import ReactMarkdown from "react-markdown";
 // This is a server to host data-local resources like databases and RSC.
 
 createServer(async (req, res) => {
@@ -60,7 +59,9 @@ async function Post({ slug }) {
       <h2>
         <a href={"/" + slug}>{slug}</a>
       </h2>
-      <article>{content}</article>
+      <article>
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </article>
     </section>
   );
 }
