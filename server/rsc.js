@@ -1,6 +1,7 @@
 import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import sanitizeFilename from "sanitize-filename";
+import { Fragment } from "react";
 
 // This is a server to host data-local resources like databases and RSC.
 
@@ -87,14 +88,16 @@ function BlogLayout({ children }) {
 
 function Footer({ author }) {
   return (
-    <footer>
-      <hr />
-      <p>
-        <i>
-          (c) {author} {new Date().getFullYear()}
-        </i>
-      </p>
-    </footer>
+    <>
+      <footer>
+        <hr />
+        <p>
+          <i>
+            (c) {author} {new Date().getFullYear()}
+          </i>
+        </p>
+      </footer>
+    </>
   );
 }
 
@@ -121,6 +124,42 @@ function stringifyJSX(key, value) {
   }
 }
 // evaluates server jsx tree returned by Router to return client jsx with data ouput
+// async function renderJSXToClientJSX(jsx) {
+//   if (
+//     typeof jsx === "string" ||
+//     typeof jsx === "number" ||
+//     typeof jsx === "boolean" ||
+//     jsx == null
+//   ) {
+//     return jsx;
+//   } else if (Array.isArray(jsx)) {
+//     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
+//   } else if (jsx != null && typeof jsx === "object") {
+//     if (jsx.$$typeof === Symbol.for("react.element")) {
+//       if (typeof jsx.type === "string") {
+//         return {
+//           ...jsx,
+//           props: await renderJSXToClientJSX(jsx.props),
+//         };
+//       } else if (typeof jsx.type === "function") {
+//         const Component = jsx.type;
+//         const props = jsx.props;
+//         const returnedJsx = await Component(props); // this is where server fetching happens
+//         return renderJSXToClientJSX(returnedJsx);
+//       } else throw new Error("Not implemented.");
+//     } else {
+//       return Object.fromEntries(
+//         await Promise.all(
+//           Object.entries(jsx).map(async ([propName, value]) => [
+//             propName,
+//             await renderJSXToClientJSX(value),
+//           ])
+//         )
+//       );
+//     }
+//   } else throw new Error("Not implemented");
+// }
+
 async function renderJSXToClientJSX(jsx) {
   if (
     typeof jsx === "string" ||
@@ -133,7 +172,10 @@ async function renderJSXToClientJSX(jsx) {
     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
   } else if (jsx != null && typeof jsx === "object") {
     if (jsx.$$typeof === Symbol.for("react.element")) {
-      if (typeof jsx.type === "string") {
+      if (jsx.type === Symbol.for("react.fragment")) {
+        //         // handle fragments
+        return renderJSXToClientJSX(jsx.props.children);
+      } else if (typeof jsx.type === "string") {
         return {
           ...jsx,
           props: await renderJSXToClientJSX(jsx.props),
@@ -143,7 +185,10 @@ async function renderJSXToClientJSX(jsx) {
         const props = jsx.props;
         const returnedJsx = await Component(props); // this is where server fetching happens
         return renderJSXToClientJSX(returnedJsx);
-      } else throw new Error("Not implemented.");
+      } else {
+        console.log("jsx fragment", jsx);
+        throw new Error("Not implemented.");
+      }
     } else {
       return Object.fromEntries(
         await Promise.all(
@@ -154,5 +199,47 @@ async function renderJSXToClientJSX(jsx) {
         )
       );
     }
-  } else throw new Error("Not implemented");
+  } else {
+    console.log("jsx fragment", jsx);
+    throw new Error("Not implemented");
+  }
 }
+
+// async function renderJSXToClientJSX(jsx) {
+//   if (
+//     typeof jsx === "string" ||
+//     typeof jsx === "number" ||
+//     typeof jsx === "boolean" ||
+//     jsx == null
+//   ) {
+//     return jsx;
+//   } else if (Array.isArray(jsx)) {
+//     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
+//   } else if (jsx != null && typeof jsx === "object") {
+//     if (jsx.$$typeof === Symbol.for("react.element")) {
+//       if (jsx.type === Symbol.for("react.fragment")) {
+//         // handle fragments
+//         return renderJSXToClientJSX(jsx.props.children);
+//       } else if (typeof jsx.type === "string") {
+//         return {
+//           ...jsx,
+//           props: await renderJSXToClientJSX(jsx.props),
+//         };
+//       } else if (typeof jsx.type === "function") {
+//         const Component = jsx.type;
+//         const props = jsx.props;
+//         const returnedJsx = await Component(props); // this is where server fetching happens
+//         return renderJSXToClientJSX(returnedJsx);
+//       } else throw new Error("Not implemented.");
+//     } else {
+//       return Object.fromEntries(
+//         await Promise.all(
+//           Object.entries(jsx).map(async ([propName, value]) => [
+//             propName,
+//             await renderJSXToClientJSX(value),
+//           ])
+//         )
+//       );
+//     }
+//   } else throw new Error("Not implemented");
+// }
