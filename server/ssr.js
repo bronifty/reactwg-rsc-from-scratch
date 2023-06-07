@@ -1,5 +1,5 @@
-import { createServer } from "http";
-import { readFile } from "fs/promises";
+import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
 import { renderToString } from "react-dom/server";
 import commentWriter from "../utils/commentWriter.js";
 
@@ -83,37 +83,55 @@ function parseJSX(key, value) {
   }
 }
 
+function parseUrlEncodedData(data) {
+  const pairs = data.split("&");
+  const result = {};
+  for (let pair of pairs) {
+    const [key, value] = pair.split("=");
+    result[decodeURIComponent(key)] = decodeURIComponent(value);
+  }
+  return result;
+}
+
 async function handleComment(req, res, url) {
   const slug = url.searchParams.get("slug");
-  console.log("in handleComment: slug: ", slug, "url: ", url, "req: ", req);
-
-  // const form = req.body();
+  // console.log("in handleComment: slug: ", slug, "url: ", url);
   let body = "";
-  // req.on("data", (chunk) => {
-  //   body += chunk.toString();
-  // });
-  // req.on("end", async () => {
-  //   const comment = body.split("=")[1];
-  //   const comments = await readFile(
-  //     `./comments/comments-${slug}.json`,
-  //     "utf8"
-  //   );
-  //   const commentId = comments.length
-  //     ? comments[comments.length - 1].commentId + 1
-  //     : 1;
-  //   const newComment = { commentId, text: comment, timestamp: Date.now() };
-  //   comments.push(newComment);
-  //   await writeFile(
-  //     "./comments/comments.json",
-  //     JSON.stringify(comments),
-  //     "utf8"
-  //   );
-  //   res.end("Comment added successfully.");
-  // });
-  await commentWriter({
-    slug: "hello-world",
-    comment: "This is another comment from ssr.js",
-    author: "John Doe",
+  req.on("data", (chunk) => {
+    body += chunk.toString();
   });
+  req.on("end", async () => {
+    const formData = parseUrlEncodedData(body);
+    const comment = formData.comment;
+    // ...
+    // });
+
+    // req.on("end", async () => {
+    // doesn't work trying to convert the body array into a string then parse it into JSON
+    // const JSONString = body.split("=")[1];
+    // const JSONBody = JSON.parse(JSONString);
+    // console.log("JSONBody: ", JSONBody);
+    // const comment = body.split("=")[1];
+    const comments = await readFile(`./comments/comments-${slug}.json`, "utf8");
+    console.log("body: ", body, "comment: ", comment);
+    // console.log("body: ", body, "comment: ", comment, "comments: ", comments);
+    // const commentId = comments.length
+    //   ? comments[comments.length - 1].commentId + 1
+    //   : 1;
+    // const newComment = { commentId, text: comment, timestamp: Date.now() };
+    // comments.push(newComment);
+    // await writeFile(
+    //   "./comments/comments-hello-world.json",
+    //   JSON.stringify(comments),
+    //   "utf8"
+    // );
+    await commentWriter({
+      slug: "hello-world",
+      comment: `This is a another test comment from ssr.js ${comment}`,
+      author: "John Doe",
+    });
+    res.end("Comment added successfully.");
+  });
+
   return;
 }

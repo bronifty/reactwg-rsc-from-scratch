@@ -89,7 +89,6 @@ async function Post({ slug }) {
 async function CommentForm({ slug }) {
   return (
     <form id="{{slug}}-form" action={`/comments?slug=${slug}`} method="post">
-      <input type="hidden" name="slug" value={slug} />
       <textarea name="comment" required></textarea>
       <button type="submit">Post Comment</button>
     </form>
