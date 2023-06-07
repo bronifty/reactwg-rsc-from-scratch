@@ -114,7 +114,7 @@ async function handleComment(req, res, url) {
     // const JSONBody = JSON.parse(JSONString);
     // console.log("JSONBody: ", JSONBody);
     // const comment = body.split("=")[1];
-    const comments = await readFile(`./comments/comments-${slug}.json`, "utf8");
+    // const comments = await readFile(`./comments/comments-${slug}.json`, "utf8");
     console.log("body: ", body, "comment: ", comment);
     // console.log("body: ", body, "comment: ", comment, "comments: ", comments);
     // const commentId = comments.length

@@ -1,7 +1,1 @@
-{
-  "commentId": 1,
-  "content": "This is a comment",
-  "author": "John Doe",
-  "timestamp": 1234567890,
-  "postId": "cat-api"
-}
+[{"commentId":1,"content":"This is a comment","author":"John Doe","timestamp":1234567890,"postId":"cat-api"},{"commentId":2,"content":"kitty comment","author":"John Doe","timestamp":1686181641870,"postId":"cat-api"}]
