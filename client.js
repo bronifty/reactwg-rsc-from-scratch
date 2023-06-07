@@ -1,6 +1,8 @@
 // import React from "https://esm.sh/react@canary";
 // import ReactDOM, { hydrateRoot } from "https://esm.sh/react-dom@canary/client";
 import { hydrateRoot } from "react-dom/client";
+import ReactMarkdown from "react-markdown";
+
 let currentPathname = window.location.pathname;
 
 const root = hydrateRoot(document, getInitialClientJSX());
