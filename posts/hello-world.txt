@@ -1,2 +1,10 @@
 # h1
 hello
+
+
+
+```js
+function hello() {
+  console.log('hello')
+}
+```
