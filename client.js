@@ -1,14 +1,50 @@
+// import React from "https://esm.sh/react@canary";
+// import ReactDOM, { hydrateRoot } from "https://esm.sh/react-dom@canary/client";
+import { hydrateRoot } from "react-dom/client";
 let currentPathname = window.location.pathname;
 
-// instead of replacing the body directly, we are going to use a new navigation function that adds jsx search param for the server, which will control flow to a branch that renders JSX to client JSX, meaning, it makes all the server calls first, gets the data in JSX object format and sends it to the client as JSX instead of HTML string
+const root = hydrateRoot(document, getInitialClientJSX());
+
+function getInitialClientJSX() {
+  const clientJSX = JSON.parse(window.__INITIAL_CLIENT_JSX_STRING__, parseJSX);
+  return clientJSX;
+}
 async function navigate(pathname) {
   currentPathname = pathname;
-  const response = await fetch(pathname + "?jsx");
-  const jsonString = await response.text();
+  const clientJSX = await fetchClientJSX(pathname);
   if (pathname === currentPathname) {
-    alert(jsonString);
+    root.render(clientJSX);
   }
 }
+
+async function fetchClientJSX(pathname) {
+  const response = await fetch(pathname + "?jsx");
+  const clientJSXString = await response.text();
+  const clientJSX = JSON.parse(clientJSXString, parseJSX);
+  return clientJSX;
+}
+
+function parseJSX(key, value) {
+  if (value === "$RE") {
+    // This is our special marker we added on the server.
+    // Restore the Symbol to tell React that this is valid JSX.
+    return Symbol.for("react.element");
+  } else if (typeof value === "string" && value.startsWith("$$")) {
+    // This is a string starting with $. Remove the extra $ added by the server.
+    return value.slice(1);
+  } else {
+    return value;
+  }
+}
+
+// async function navigate(pathname) {
+//   currentPathname = pathname;
+//   const response = await fetch(pathname + "?jsx");
+//   const jsonString = await response.text();
+//   if (pathname === currentPathname) {
+//     alert(jsonString);
+//   }
+// }
 
 // async function navigate(pathname) {
 //   currentPathname = pathname;
@@ -52,7 +88,7 @@ window.addEventListener(
   true
 );
 
-window.addEventListener("popstate", () => {
+window.addEventListener("popstate", (event) => {
   // When the user presses Back/Forward, call our custom logic too.
   navigate(window.location.pathname);
 });

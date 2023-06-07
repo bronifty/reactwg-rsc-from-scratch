@@ -2,11 +2,13 @@ import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import escapeHtml from "escape-html";
 import sanitizeFilename from "sanitize-filename";
+import { renderToString } from "react-dom/server";
 
+const PORT = 8080;
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   console.log(url);
-  // if first load, client is requested by index page
+  // if first load, client is requested by index page, sendScript is a dummy script
   if (url.pathname === "/client.js") {
     sendScript(res, "./client.js");
     return;
@@ -15,8 +17,10 @@ createServer(async (req, res) => {
   try {
     if (url.searchParams.has("jsx")) {
       url.searchParams.delete("jsx");
+      // RSC (lives in window.__INITIAL_CLIENT_JSX_STRING__)
       await sendJSX(res, <Router url={url} />);
     } else {
+      // SSR (1st load)
       await sendHTML(res, <Router url={url} />);
     }
   } catch (err) {
@@ -24,7 +28,7 @@ createServer(async (req, res) => {
     res.writeHead(err.statusCode ?? 500);
     res.end();
   }
-}).listen(8080);
+}).listen(PORT);
 
 async function sendScript(res, filename) {
   const content = await readFile(filename, "utf8");
@@ -113,9 +117,21 @@ function Footer({ author }) {
 
 async function sendJSX(res, jsx) {
   const clientJSX = await renderJSXToClientJSX(jsx);
-  const clientJSXString = JSON.stringify(clientJSX, null, 2);
+  const clientJSXString = JSON.stringify(clientJSX, stringifyJSX);
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(clientJSXString);
+}
+
+function stringifyJSX(key, value) {
+  if (value === Symbol.for("react.element")) {
+    // We can't pass a symbol, so pass our magic string instead.
+    return "$RE"; // Could be arbitrary. I picked RE for React Element.
+  } else if (typeof value === "string" && value.startsWith("$")) {
+    // To avoid clashes, prepend an extra $ to any string already starting with $.
+    return "$" + value;
+  } else {
+    return value;
+  }
 }
 
 async function renderJSXToClientJSX(jsx) {
@@ -162,62 +178,100 @@ async function renderJSXToClientJSX(jsx) {
   } else throw new Error("Not implemented");
 }
 
+// dual purpose SSR and client-side hydration
+// we could effectively rename it sendHTMLAndJSX
+// sends what is in the html variable to / endpoint on port server is serving
+// sends __INITIAL_CLIENT_JSX_STRING__ to the window
 async function sendHTML(res, jsx) {
-  let body = await renderJSXToHTML(jsx);
-  let html = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <script type="module" src="/client.js"></script>
-    </head>
-    <body>
-      ${body}
-    </body>
-  </html>
+  const clientJSX = await renderJSXToClientJSX(jsx);
+  let html = await renderToString(clientJSX);
+  const clientJSXString = JSON.stringify(clientJSX, stringifyJSX);
+  html += `<script>window.__INITIAL_CLIENT_JSX_STRING__ = `;
+  html += JSON.stringify(clientJSXString).replace(/</g, "\\u003c"); // Escape the string
+  html += `</script>`;
+  html += `
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@canary",
+          "react-dom/client": "https://esm.sh/react-dom@canary/client"
+        }
+      }
+    </script>
+    <script type="module" src="/client.js"></script>
   `;
+  // console.log(html);
   res.writeHead(200, { "Content-Type": "text/html" });
   res.end(html);
 }
 
-// async vanilla render function (wait for async Component to fetch own data)
-async function renderJSXToHTML(jsx) {
-  if (typeof jsx === "string" || typeof jsx === "number") {
-    return escapeHtml(jsx);
-  } else if (jsx == null || typeof jsx === "boolean") {
-    return "";
-  } else if (Array.isArray(jsx)) {
-    const childHtmls = await Promise.all(
-      jsx.map((child) => renderJSXToHTML(child))
-    );
-    return childHtmls.join("");
-  } else if (typeof jsx === "object") {
-    if (jsx.$$typeof === Symbol.for("react.element")) {
-      if (typeof jsx.type === "string") {
-        // Is this a tag like <div>?
-        // Existing code that handles HTML tags (like <p>).
-        let html = "<" + jsx.type;
-        for (const propName in jsx.props) {
-          if (jsx.props.hasOwnProperty(propName) && propName !== "children") {
-            html += " ";
-            html += propName;
-            html += "=";
-            html += escapeHtml(jsx.props[propName]);
-          }
-        }
-        html += ">";
-        html += await renderJSXToHTML(jsx.props.children);
-        html += "</" + jsx.type + ">";
-        return html;
-      } else if (typeof jsx.type === "function") {
-        // Is it a component like <BlogPostPage>?
-        const Component = jsx.type;
+// async function sendHTML(res, jsx) {
+//   let body = await renderJSXToHTML(jsx);
+//   let html = `
+//   <!DOCTYPE html>
+//   <html>
+//     <head>
+//       <script type="module" src="/client.js"></script>
+//     </head>
+//     <body>
+//       ${body}
+//     </body>
+//   </html>
+//   `;
+//   res.writeHead(200, { "Content-Type": "text/html" });
+//   res.end(html);
+// }
 
-        const props = jsx.props;
-        // jsx ast returned from component function due to babel react plugin
-        const returnedJsx = await Component(props);
-        // recursively render jsx ast to html string
-        return await renderJSXToHTML(returnedJsx);
-      } else throw new Error("Not implemented.");
-    } else throw new Error("Cannot render an object.");
-  } else throw new Error("Not implemented.");
-}
+// async vanilla render function (wait for async Component to fetch own data)
+// async function renderJSXToHTML(jsx) {
+//   if (typeof jsx === "string" || typeof jsx === "number") {
+//     return escapeHtml(jsx);
+//   } else if (jsx == null || typeof jsx === "boolean") {
+//     return "";
+//   } else if (Array.isArray(jsx)) {
+//     const childHtmls = await Promise.all(
+//       jsx.map((child) => renderJSXToHTML(child))
+//     );
+//     let html = "";
+//     let wasTextNode = false;
+//     let isTextNode = false;
+//     for (let i = 0; i < jsx.length; i++) {
+//       isTextNode = typeof jsx[i] === "string" || typeof jsx[i] === "number";
+//       if (wasTextNode && isTextNode) {
+//         html += "<!-- -->";
+//       }
+//       html += childHtmls[i];
+//       wasTextNode = isTextNode;
+//     }
+//     return html;
+//   } else if (typeof jsx === "object") {
+//     if (jsx.$$typeof === Symbol.for("react.element")) {
+//       if (typeof jsx.type === "string") {
+//         // Is this a tag like <div>?
+//         // Existing code that handles HTML tags (like <p>).
+//         let html = "<" + jsx.type;
+//         for (const propName in jsx.props) {
+//           if (jsx.props.hasOwnProperty(propName) && propName !== "children") {
+//             html += " ";
+//             html += propName;
+//             html += "=";
+//             html += escapeHtml(jsx.props[propName]);
+//           }
+//         }
+//         html += ">";
+//         html += await renderJSXToHTML(jsx.props.children);
+//         html += "</" + jsx.type + ">";
+//         return html;
+//       } else if (typeof jsx.type === "function") {
+//         // Is it a component like <BlogPostPage>?
+//         const Component = jsx.type;
+
+//         const props = jsx.props;
+//         // jsx ast returned from component function due to babel react plugin
+//         const returnedJsx = await Component(props);
+//         // recursively render jsx ast to html string
+//         return await renderJSXToHTML(returnedJsx);
+//       } else throw new Error("Not implemented.");
+//     } else throw new Error("Cannot render an object.");
+//   } else throw new Error("Not implemented.");
+// }
