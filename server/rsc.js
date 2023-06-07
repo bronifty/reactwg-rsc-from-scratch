@@ -60,7 +60,15 @@ async function Post({ slug }) {
         <a href={"/" + slug}>{slug}</a>
       </h2>
       <article>
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <ReactMarkdown
+          children={content}
+          components={{
+            img: ({ node, ...props }) => (
+              <img style={{ maxWidth: "100%" }} {...props} />
+            ),
+          }}
+        />
+        {/* <ReactMarkdown>{content}</ReactMarkdown> */}
       </article>
     </section>
   );
