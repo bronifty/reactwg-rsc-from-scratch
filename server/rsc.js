@@ -98,11 +98,13 @@ async function CommentForm({ slug }) {
 async function Comments({ slug }) {
   let comments;
   try {
-    const commentsFile = await readFile(
-      "./comments/comments-" + slug + ".json",
-      "utf8"
-    );
+    const commentsFile = await readFile("./comments/comments.json", "utf8");
+    // const commentsFile = await readFile(
+    //   "./comments/comments-" + slug + ".json",
+    //   "utf8"
+    // );
     comments = JSON.parse(commentsFile);
+    comments.filter((comment) => comment.slug === slug);
   } catch (err) {
     console.log("No comments found for post:", slug);
     // throwNotFound(err);
