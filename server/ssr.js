@@ -88,7 +88,9 @@ function parseUrlEncodedData(data) {
   const result = {};
   for (let pair of pairs) {
     const [key, value] = pair.split("=");
-    result[decodeURIComponent(key)] = decodeURIComponent(value);
+    result[decodeURIComponent(key)] = decodeURIComponent(
+      value.replace(/\+/g, " ")
+    );
   }
   return result;
 }
@@ -126,8 +128,8 @@ async function handleComment(req, res, url) {
     //   "utf8"
     // );
     await commentWriter({
-      slug: "hello-world",
-      comment: `This is a another test comment from ssr.js ${comment}`,
+      slug,
+      comment,
       author: "John Doe",
     });
     res.end("Comment added successfully.");

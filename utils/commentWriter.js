@@ -1,12 +1,5 @@
 import { writeFile, readFile } from "node:fs/promises";
 // import { Buffer } from "node:buffer";
-// {
-//   "postId": 1,
-//   "commentId": 1,
-//   "content": "This is a comment",
-//   "author": "John Doe",
-//   "timestamp": 1234567890
-// }
 
 async function commentWriter({ slug, comment, author }) {
   const commentsJSON = await readFile(
