@@ -14,7 +14,7 @@ createServer(async (req, res) => {
     res.end();
   }
 }).listen(8081);
-
+// determines jsx
 function Router({ url }) {
   let page;
   if (url.pathname === "/") {
@@ -110,7 +110,7 @@ function throwNotFound(cause) {
   notFound.statusCode = 404;
   throw notFound;
 }
-
+// replacer function
 function stringifyJSX(key, value) {
   if (value === Symbol.for("react.element")) {
     return "$RE";
@@ -120,7 +120,7 @@ function stringifyJSX(key, value) {
     return value;
   }
 }
-
+// evaluates server jsx tree returned by Router to return client jsx with data ouput
 async function renderJSXToClientJSX(jsx) {
   if (
     typeof jsx === "string" ||
@@ -141,7 +141,7 @@ async function renderJSXToClientJSX(jsx) {
       } else if (typeof jsx.type === "function") {
         const Component = jsx.type;
         const props = jsx.props;
-        const returnedJsx = await Component(props);
+        const returnedJsx = await Component(props); // this is where server fetching happens
         return renderJSXToClientJSX(returnedJsx);
       } else throw new Error("Not implemented.");
     } else {

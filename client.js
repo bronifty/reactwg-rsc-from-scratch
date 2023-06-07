@@ -88,7 +88,7 @@ window.addEventListener(
   true
 );
 
-window.addEventListener("popstate", () => {
+window.addEventListener("popstate", (event) => {
   // When the user presses Back/Forward, call our custom logic too.
   navigate(window.location.pathname);
 });

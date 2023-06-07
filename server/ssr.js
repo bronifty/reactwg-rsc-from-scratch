@@ -49,7 +49,7 @@ createServer(async (req, res) => {
     res.end();
   }
 }).listen(8080);
-
+// reviver function
 function parseJSX(key, value) {
   if (value === "$RE") {
     return Symbol.for("react.element");
