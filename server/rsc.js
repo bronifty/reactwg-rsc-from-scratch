@@ -2,6 +2,7 @@ import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import sanitizeFilename from "sanitize-filename";
 import ReactMarkdown from "react-markdown";
+import readDirectory from "../utils/readdir.js";
 // This is a server to host data-local resources like databases and RSC.
 
 createServer(async (req, res) => {
@@ -27,10 +28,15 @@ function Router({ url }) {
 }
 
 async function BlogIndexPage() {
-  const postFiles = await readdir("./posts");
-  const postSlugs = postFiles.map((file) =>
-    file.slice(0, file.lastIndexOf("."))
-  );
+  async function getPostSlugs() {
+    const directoryPath = "./posts";
+    const postFiles = await readDirectory(directoryPath);
+    const postSlugs = postFiles.map((file) =>
+      file.slice(0, file.lastIndexOf("."))
+    );
+    return postSlugs;
+  }
+  const postSlugs = await getPostSlugs();
   return (
     <section>
       <h1>Welcome to my blog</h1>
@@ -252,3 +258,4 @@ async function renderJSXToClientJSX(jsx) {
 //     }
 //   } else throw new Error("Not implemented");
 // }
+// TRIA3210
