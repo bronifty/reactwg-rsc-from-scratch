@@ -9,12 +9,14 @@ function getInitialClientJSX() {
   const clientJSX = JSON.parse(window.__INITIAL_CLIENT_JSX_STRING__, parseJSX);
   return clientJSX;
 }
+
 async function navigate(pathname) {
   currentPathname = pathname;
   const clientJSX = await fetchClientJSX(pathname);
   if (pathname === currentPathname) {
     root.render(clientJSX);
   }
+  document.body.style.backgroundColor = getRandomColor();
 }
 
 async function fetchClientJSX(pathname) {
@@ -92,3 +94,12 @@ window.addEventListener("popstate", (event) => {
   // When the user presses Back/Forward, call our custom logic too.
   navigate(window.location.pathname);
 });
+
+function getRandomColor() {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
