@@ -1,0 +1,11 @@
+Is jsx a JSX element? (jsx.$$typeof === Symbol.for("react.element"))
+  |
+  Yes
+  |
+  --> Is jsx a JSX fragment? (jsx.type === Symbol.for("react.fragment"))
+        |
+        Yes - Handle JSX fragment
+        |
+        No - Handle other types of JSX elements
+  |
+  No - Handle other types of data
