@@ -76,6 +76,35 @@ async function Post({ slug }) {
         />
         {/* <ReactMarkdown>{content}</ReactMarkdown> */}
       </article>
+      <Comments slug={slug} />
+    </section>
+  );
+}
+
+async function Comments({ slug }) {
+  let comments;
+  try {
+    const commentsFile = await readFile(
+      "./comments/comments-" + slug + ".json",
+      "utf8"
+    );
+    comments = JSON.parse(commentsFile);
+  } catch (err) {
+    throwNotFound(err);
+  }
+  return (
+    <section>
+      <h2>Comments</h2>
+      <ul>
+        {comments.map((comment) => (
+          <li key={comment.id}>
+            <p>{comment.content}</p>
+            <p>
+              <i>by {comment.author}</i>
+            </p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -138,42 +167,6 @@ function stringifyJSX(key, value) {
     return value;
   }
 }
-// evaluates server jsx tree returned by Router to return client jsx with data ouput
-// async function renderJSXToClientJSX(jsx) {
-//   if (
-//     typeof jsx === "string" ||
-//     typeof jsx === "number" ||
-//     typeof jsx === "boolean" ||
-//     jsx == null
-//   ) {
-//     return jsx;
-//   } else if (Array.isArray(jsx)) {
-//     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
-//   } else if (jsx != null && typeof jsx === "object") {
-//     if (jsx.$$typeof === Symbol.for("react.element")) {
-//       if (typeof jsx.type === "string") {
-//         return {
-//           ...jsx,
-//           props: await renderJSXToClientJSX(jsx.props),
-//         };
-//       } else if (typeof jsx.type === "function") {
-//         const Component = jsx.type;
-//         const props = jsx.props;
-//         const returnedJsx = await Component(props); // this is where server fetching happens
-//         return renderJSXToClientJSX(returnedJsx);
-//       } else throw new Error("Not implemented.");
-//     } else {
-//       return Object.fromEntries(
-//         await Promise.all(
-//           Object.entries(jsx).map(async ([propName, value]) => [
-//             propName,
-//             await renderJSXToClientJSX(value),
-//           ])
-//         )
-//       );
-//     }
-//   } else throw new Error("Not implemented");
-// }
 
 async function renderJSXToClientJSX(jsx) {
   if (
@@ -188,7 +181,6 @@ async function renderJSXToClientJSX(jsx) {
   } else if (jsx != null && typeof jsx === "object") {
     if (jsx.$$typeof === Symbol.for("react.element")) {
       if (jsx.type === Symbol.for("react.fragment")) {
-        //         // handle fragments
         return renderJSXToClientJSX(jsx.props.children);
       } else if (typeof jsx.type === "string") {
         return {
@@ -219,43 +211,3 @@ async function renderJSXToClientJSX(jsx) {
     throw new Error("Not implemented");
   }
 }
-
-// async function renderJSXToClientJSX(jsx) {
-//   if (
-//     typeof jsx === "string" ||
-//     typeof jsx === "number" ||
-//     typeof jsx === "boolean" ||
-//     jsx == null
-//   ) {
-//     return jsx;
-//   } else if (Array.isArray(jsx)) {
-//     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
-//   } else if (jsx != null && typeof jsx === "object") {
-//     if (jsx.$$typeof === Symbol.for("react.element")) {
-//       if (jsx.type === Symbol.for("react.fragment")) {
-//         // handle fragments
-//         return renderJSXToClientJSX(jsx.props.children);
-//       } else if (typeof jsx.type === "string") {
-//         return {
-//           ...jsx,
-//           props: await renderJSXToClientJSX(jsx.props),
-//         };
-//       } else if (typeof jsx.type === "function") {
-//         const Component = jsx.type;
-//         const props = jsx.props;
-//         const returnedJsx = await Component(props); // this is where server fetching happens
-//         return renderJSXToClientJSX(returnedJsx);
-//       } else throw new Error("Not implemented.");
-//     } else {
-//       return Object.fromEntries(
-//         await Promise.all(
-//           Object.entries(jsx).map(async ([propName, value]) => [
-//             propName,
-//             await renderJSXToClientJSX(value),
-//           ])
-//         )
-//       );
-//     }
-//   } else throw new Error("Not implemented");
-// }
-// TRIA3210
