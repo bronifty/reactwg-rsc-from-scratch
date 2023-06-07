@@ -76,10 +76,36 @@ async function Post({ slug }) {
         />
         {/* <ReactMarkdown>{content}</ReactMarkdown> */}
       </article>
+      {/* <CommentForm slug={slug} /> */}
       <Comments slug={slug} />
     </section>
   );
 }
+
+// async function CommentForm({ slug }) {
+//   return (
+//     <form
+//       id={slug + "-form"}
+//       onSubmit={async (e) => {
+//         e.preventDefault();
+//         const comment = e.target.elements.comment.value;
+//         const comments = await readFile(`./comments/${slug}.json`, "utf8");
+//         const commentId = comments.length
+//           ? comments[comments.length - 1].commentId + 1
+//           : 1;
+//         const newComment = { commentId, text: comment, timestamp: Date.now() };
+//         comments.push(newComment);
+//         await writeFile(
+//           `./comments/${slug}.json`,
+//           JSON.stringify(comments),
+//           "utf8"
+//         );
+//       }}>
+//       <textarea name="comment" required />
+//       <button type="submit">Post Comment</button>
+//     </form>
+//   );
+// }
 
 async function Comments({ slug }) {
   let comments;
@@ -90,20 +116,23 @@ async function Comments({ slug }) {
     );
     comments = JSON.parse(commentsFile);
   } catch (err) {
-    throwNotFound(err);
+    console.log("No comments found for post:", slug);
+    // throwNotFound(err);
   }
   return (
     <section>
-      <h2>Comments</h2>
+      {comments && <h2>Comments</h2>}
       <ul>
-        {comments.map((comment) => (
-          <li key={comment.id}>
-            <p>{comment.content}</p>
-            <p>
-              <i>by {comment.author}</i>
-            </p>
-          </li>
-        ))}
+        {comments
+          ? comments.map((comment) => (
+              <li key={comment.id}>
+                <p>{comment.content}</p>
+                <p>
+                  <i>by {comment.author}</i>
+                </p>
+              </li>
+            ))
+          : null}
       </ul>
     </section>
   );
