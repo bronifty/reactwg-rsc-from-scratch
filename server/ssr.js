@@ -8,46 +8,8 @@ import commentWriter from "../utils/commentWriter.js";
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
-
-    if (url.pathname === "/comments" && req.method === "POST") {
-      console.log(
-        "POST request received ",
-        " req.method: ",
-        req.method,
-        " url.pathname: ",
-        url.pathname,
-        " req.body: ",
-        req.body
-      );
-      await commentWriter({
-        slug: "hello-world",
-        comment: "This is a comment from ssr.js",
-        author: "John Doe",
-      });
-      // const form = req.body()
-      // let body = "";
-      // req.on("data", (chunk) => {
-      //   body += chunk.toString();
-      // });
-      // req.on("end", async () => {
-      //   const comment = body.split("=")[1];
-      //   const comments = await readFile(
-      //     `./comments/comments-${slug}.json`,
-      //     "utf8"
-      //   );
-      //   const commentId = comments.length
-      //     ? comments[comments.length - 1].commentId + 1
-      //     : 1;
-      //   const newComment = { commentId, text: comment, timestamp: Date.now() };
-      //   comments.push(newComment);
-      //   await writeFile(
-      //     "./comments/comments.json",
-      //     JSON.stringify(comments),
-      //     "utf8"
-      //   );
-      //   res.end("Comment added successfully.");
-      // });
-      return;
+    if (url.searchParams.has("slug")) {
+      await handleComment(req, res, url);
     }
 
     if (url.pathname === "/client.js") {
@@ -119,4 +81,39 @@ function parseJSX(key, value) {
   } else {
     return value;
   }
+}
+
+async function handleComment(req, res, url) {
+  const slug = url.searchParams.get("slug");
+  console.log("in handleComment: slug: ", slug, "url: ", url, "req: ", req);
+
+  // const form = req.body();
+  let body = "";
+  // req.on("data", (chunk) => {
+  //   body += chunk.toString();
+  // });
+  // req.on("end", async () => {
+  //   const comment = body.split("=")[1];
+  //   const comments = await readFile(
+  //     `./comments/comments-${slug}.json`,
+  //     "utf8"
+  //   );
+  //   const commentId = comments.length
+  //     ? comments[comments.length - 1].commentId + 1
+  //     : 1;
+  //   const newComment = { commentId, text: comment, timestamp: Date.now() };
+  //   comments.push(newComment);
+  //   await writeFile(
+  //     "./comments/comments.json",
+  //     JSON.stringify(comments),
+  //     "utf8"
+  //   );
+  //   res.end("Comment added successfully.");
+  // });
+  await commentWriter({
+    slug: "hello-world",
+    comment: "This is another comment from ssr.js",
+    author: "John Doe",
+  });
+  return;
 }
