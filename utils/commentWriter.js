@@ -1,4 +1,3 @@
-import { write } from "node:fs";
 import { writeFile, readFile } from "node:fs/promises";
 // import { Buffer } from "node:buffer";
 // {
@@ -9,7 +8,7 @@ import { writeFile, readFile } from "node:fs/promises";
 //   "timestamp": 1234567890
 // }
 
-async function writeComment({ slug, comment, author }) {
+async function commentWriter({ slug, comment, author }) {
   const commentsJSON = await readFile(
     `./comments/comments-${slug}.json`,
     "utf8"
@@ -33,13 +32,13 @@ async function writeComment({ slug, comment, author }) {
   );
 }
 
-export default writeComment;
+export default commentWriter;
 
-writeComment({
-  slug: "hello-world",
-  comment: "This is a comment from the commentWriter.js file",
-  author: "John Doe",
-});
+// writeComment({
+//   slug: "hello-world",
+//   comment: "This is a comment from the commentWriter.js file",
+//   author: "John Doe",
+// });
 
 // try {
 //   const controller = new AbortController();

@@ -104,3 +104,28 @@ function getRandomColor() {
   }
   return color;
 }
+
+// async function CommentForm({ slug }) {
+//   return (
+//     <form
+//       id={slug + "-form"}
+//       onSubmit={async (e) => {
+//         e.preventDefault();
+//         const comment = e.target.elements.comment.value;
+//         const comments = await readFile(`./comments/${slug}.json`, "utf8");
+//         const commentId = comments.length
+//           ? comments[comments.length - 1].commentId + 1
+//           : 1;
+//         const newComment = { commentId, text: comment, timestamp: Date.now() };
+//         comments.push(newComment);
+//         await writeFile(
+//           `./comments/${slug}.json`,
+//           JSON.stringify(comments),
+//           "utf8"
+//         );
+//       }}>
+//       <textarea name="comment" required />
+//       <button type="submit">Post Comment</button>
+//     </form>
+//   );
+// }
