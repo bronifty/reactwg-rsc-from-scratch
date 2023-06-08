@@ -107,18 +107,17 @@ async function Comments({ slug }) {
   }
   return (
     <section>
-      {comments && <h2>Comments</h2>}
+      <h2>Comments</h2>
       <ul>
-        {comments
-          ? comments.map((comment) => (
-              <li key={comment.slug}>
-                <p>{comment.comment}</p>
-                <p>
-                  <i>by {comment.author}</i>
-                </p>
-              </li>
-            ))
-          : null}
+        {comments?.map((comment) => (
+          <li key={comment.slug}>
+            <p>{comment.comment}</p>
+            <p>
+              <i>by {comment.author}</i>
+            </p>
+            <p>at {Date(comment.timestamp)}</p>
+          </li>
+        ))}
       </ul>
     </section>
   );
