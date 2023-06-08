@@ -53,40 +53,44 @@ window.addEventListener(
     if (e.target.tagName !== "FORM") {
       return;
     }
+    e.preventDefault();
+
     console.log("in the window submit interceptor; e.target: ", e.target);
+    let form = e.target;
+    let slug = form.elements["slug"].value;
+    let comment = form.elements["comment"].value;
+
+    console.log(slug, comment);
 
     // Prevent the browser from sending the form and reloading the page.
-    e.preventDefault();
-    const href = e.target.getAttribute("href");
-    const url = new URL(href, window.location.origin);
-    url.searchParams.delete("jsx");
+    // const href = e.target.getAttribute("href");
+    // const url = new URL(href, window.location.origin);
+    // url.searchParams.delete("jsx");
 
-    const form = e.target;
-    const formData = new FormData(form);
-    const slug = formData.get("slug");
+    const formData = new FormData();
+    formData.append("slug", slug);
+    formData.append("comment", comment);
 
-    const comment = formData.get("comment");
-    console.log(
-      "in the window submit interceptor; slug: ",
-      slug,
-      "comment: ",
-      comment
-    );
+    const response = await fetch(slug, {
+      method: "POST",
+      body: formData,
+    });
 
     // Now you can handle the form data on the client side.
     // For example, you can send it to the server with fetch:
-    // const response = await fetch(`/comments?slug=${slug}`, {
+    // const response1 = await fetch(`/comments?slug=${slug}`, {
     //   method: "POST",
     //   headers: {
     //     "Content-Type": "application/x-www-form-urlencoded",
     //   },
     //   body: formData,
     // });
-    console.log(
-      "in the window submit interceptor; testing passing the event along to navigate to see if there is something short circuiting "
-    );
+    // console.log(
+    //   "in the window submit interceptor; testing passing the event along to navigate to see if there is something short circuiting "
+    // );
     // After submitting the form, you might want to navigate to the post.
-    navigate(slug);
+    setTimeout(() => navigate(slug), 1000);
+    // navigate(slug);
   },
   true
 );
