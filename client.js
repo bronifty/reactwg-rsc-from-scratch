@@ -13,7 +13,9 @@ function getInitialClientJSX() {
 
 async function navigate(pathname) {
   currentPathname = pathname;
+  console.log("calling navigate with pathname: ", pathname);
   const clientJSX = await fetchClientJSX(pathname);
+  // console.log("clientJSX", clientJSX);
   if (pathname === currentPathname) {
     root.render(clientJSX);
   }
@@ -21,9 +23,13 @@ async function navigate(pathname) {
 }
 
 async function fetchClientJSX(pathname) {
-  const response = await fetch(pathname + "?jsx");
+  console.log("in fetchClientJSX with pathname: ", pathname);
+  let jsxPathname = pathname + "?jsx";
+  console.log("about to fetch jsxPathname: ", jsxPathname);
+  const response = await fetch(jsxPathname);
   const clientJSXString = await response.text();
   const clientJSX = JSON.parse(clientJSXString, parseJSX);
+  console.log("retvrned with clientJSX");
   return clientJSX;
 }
 
@@ -40,35 +46,59 @@ function parseJSX(key, value) {
   }
 }
 
-// async function navigate(pathname) {
-//   currentPathname = pathname;
-//   const response = await fetch(pathname + "?jsx");
-//   const jsonString = await response.text();
-//   if (pathname === currentPathname) {
-//     alert(jsonString);
-//   }
-// }
+window.addEventListener(
+  "submit",
+  async (e) => {
+    // Only listen to form submissions.
+    if (e.target.tagName !== "FORM") {
+      return;
+    }
+    e.preventDefault();
+    // clear the form
 
-// async function navigate(pathname) {
-//   currentPathname = pathname;
-//   // Fetch HTML for the route we're navigating to.
-//   const response = await fetch(pathname);
-//   const html = await response.text();
+    console.log("in the window submit interceptor; e.target: ", e.target);
+    let form = e.target;
+    let slug = form.elements["slug"].value;
+    let comment = form.elements["comment"].value;
+    e.target.elements["comment"].value = "";
+    console.log(slug, comment);
 
-//   if (pathname === currentPathname) {
-//     // Get the part of HTML inside the <body> tag.
-//     const bodyStartIndex = html.indexOf("<body>") + "<body>".length;
-//     const bodyEndIndex = html.lastIndexOf("</body>");
-//     const bodyHTML = html.slice(bodyStartIndex, bodyEndIndex);
+    // Prevent the browser from sending the form and reloading the page.
+    // const href = e.target.getAttribute("href");
+    // const url = new URL(href, window.location.origin);
+    // url.searchParams.delete("jsx");
 
-//     // Replace the content on the page.
-//     document.body.innerHTML = bodyHTML;
-//   }
-// }
+    const formData = new FormData();
+    formData.append("slug", slug);
+    formData.append("comment", comment);
+
+    const response = await fetch(slug, {
+      method: "POST",
+      body: formData,
+    });
+
+    // Now you can handle the form data on the client side.
+    // For example, you can send it to the server with fetch:
+    // const response1 = await fetch(`/comments?slug=${slug}`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/x-www-form-urlencoded",
+    //   },
+    //   body: formData,
+    // });
+    // console.log(
+    //   "in the window submit interceptor; testing passing the event along to navigate to see if there is something short circuiting "
+    // );
+    // After submitting the form, you might want to navigate to the post.
+    setTimeout(() => navigate(slug), 2000);
+    // navigate(slug);
+  },
+  true
+);
 
 window.addEventListener(
   "click",
-  (e) => {
+  async (e) => {
     // Only listen to link clicks.
     if (e.target.tagName !== "A") {
       return;
@@ -104,3 +134,45 @@ function getRandomColor() {
   }
   return color;
 }
+
+// turn the onSubmit handler into a function
+async function handleComment(e) {
+  //         const comment = e.target.elements.comment.value;
+  //         const comments = await readFile(`./comments/${slug}.json`, "utf8");
+  //         const commentId = comments.length
+  //           ? comments[comments.length - 1].commentId + 1
+  //           : 1;
+  //         const newComment = { commentId, text: comment, timestamp: Date.now() };
+  //         comments.push(newComment);
+  //         await writeFile(
+  //           `./comments/${slug}.json`,
+  //           JSON.stringify(comments),
+  //           "utf8"
+  //         );
+  //       }}>
+}
+
+// async function CommentForm({ slug }) {
+//   return (
+//     <form
+//       id={slug + "-form"}
+//       onSubmit={async (e) => {
+//         e.preventDefault();
+//         const comment = e.target.elements.comment.value;
+//         const comments = await readFile(`./comments/${slug}.json`, "utf8");
+//         const commentId = comments.length
+//           ? comments[comments.length - 1].commentId + 1
+//           : 1;
+//         const newComment = { commentId, text: comment, timestamp: Date.now() };
+//         comments.push(newComment);
+//         await writeFile(
+//           `./comments/${slug}.json`,
+//           JSON.stringify(comments),
+//           "utf8"
+//         );
+//       }}>
+//       <textarea name="comment" required />
+//       <button type="submit">Post Comment</button>
+//     </form>
+//   );
+// }

@@ -2,11 +2,13 @@ import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import sanitizeFilename from "sanitize-filename";
 import ReactMarkdown from "react-markdown";
+import readDirectory from "../utils/readdir.js";
 // This is a server to host data-local resources like databases and RSC.
 
 createServer(async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  console.log("in rsc server, incoming req.url made into a URL: ", url);
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
     await sendJSX(res, <Router url={url} />);
   } catch (err) {
     console.error(err);
@@ -27,10 +29,15 @@ function Router({ url }) {
 }
 
 async function BlogIndexPage() {
-  const postFiles = await readdir("./posts");
-  const postSlugs = postFiles.map((file) =>
-    file.slice(0, file.lastIndexOf("."))
-  );
+  async function getPostSlugs() {
+    const directoryPath = "./posts";
+    const postFiles = await readDirectory(directoryPath);
+    const postSlugs = postFiles.map((file) =>
+      file.slice(0, file.lastIndexOf("."))
+    );
+    return postSlugs;
+  }
+  const postSlugs = await getPostSlugs();
   return (
     <section>
       <h1>Welcome to my blog</h1>
@@ -44,7 +51,13 @@ async function BlogIndexPage() {
 }
 
 function BlogPostPage({ postSlug }) {
-  return <Post slug={postSlug} />;
+  return (
+    <>
+      <Post slug={postSlug} />
+      <CommentForm slug={postSlug} />
+      <Comments slug={postSlug} />
+    </>
+  );
 }
 
 async function Post({ slug }) {
@@ -68,8 +81,71 @@ async function Post({ slug }) {
             ),
           }}
         />
-        {/* <ReactMarkdown>{content}</ReactMarkdown> */}
       </article>
+    </section>
+  );
+}
+
+async function CommentForm({ slug }) {
+  return (
+    <form id={`${slug}-form`} action={`/${slug}`} method="post">
+      <input hidden readOnly name="slug" value={slug} />
+      <textarea name="comment" required></textarea>
+      <button type="submit">Post Comment</button>
+    </form>
+  );
+}
+
+// async function CommentForm({ slug }) {
+//   return (
+//     <form
+//       id={slug + "-form"}
+//       onSubmit={function onSubmitHandler(e) {
+//         e.preventDefault();
+//         const comment = e.target.elements.comment.value;
+//         console.log("in the Comment form; comment: ", comment);
+//         // const comments = await readFile(`./comments/${slug}.json`, "utf8");
+//         // const commentId = comments.length
+//         //   ? comments[comments.length - 1].commentId + 1
+//         //   : 1;
+//         const newComment = { commentId, text: comment, timestamp: Date.now() };
+//         // comments.push(newComment);
+//         // await writeFile(
+//         //   `./comments/${slug}.json`,
+//         //   JSON.stringify(comments),
+//         //   "utf8"
+//         // );
+//       }}>
+//       <textarea name="comment" required />
+//       <button type="submit">Post Comment</button>
+//     </form>
+//   );
+// }
+
+async function Comments({ slug }) {
+  let comments;
+  try {
+    const commentsFile = await readFile("./comments/comments.json", "utf8");
+    const allComments = JSON.parse(commentsFile);
+    comments = allComments.filter((comment) => comment.slug === slug);
+  } catch (err) {
+    console.log("No comments found for post:", slug);
+    throwNotFound(err);
+  }
+  return (
+    <section>
+      <h2>Comments</h2>
+      <ul>
+        {comments?.map((comment) => (
+          <li key={comment.slug}>
+            <p>{comment.comment}</p>
+            <p>
+              <i>by {comment.author}</i>
+            </p>
+            <p>at {Date(comment.timestamp)}</p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -132,42 +208,6 @@ function stringifyJSX(key, value) {
     return value;
   }
 }
-// evaluates server jsx tree returned by Router to return client jsx with data ouput
-// async function renderJSXToClientJSX(jsx) {
-//   if (
-//     typeof jsx === "string" ||
-//     typeof jsx === "number" ||
-//     typeof jsx === "boolean" ||
-//     jsx == null
-//   ) {
-//     return jsx;
-//   } else if (Array.isArray(jsx)) {
-//     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
-//   } else if (jsx != null && typeof jsx === "object") {
-//     if (jsx.$$typeof === Symbol.for("react.element")) {
-//       if (typeof jsx.type === "string") {
-//         return {
-//           ...jsx,
-//           props: await renderJSXToClientJSX(jsx.props),
-//         };
-//       } else if (typeof jsx.type === "function") {
-//         const Component = jsx.type;
-//         const props = jsx.props;
-//         const returnedJsx = await Component(props); // this is where server fetching happens
-//         return renderJSXToClientJSX(returnedJsx);
-//       } else throw new Error("Not implemented.");
-//     } else {
-//       return Object.fromEntries(
-//         await Promise.all(
-//           Object.entries(jsx).map(async ([propName, value]) => [
-//             propName,
-//             await renderJSXToClientJSX(value),
-//           ])
-//         )
-//       );
-//     }
-//   } else throw new Error("Not implemented");
-// }
 
 async function renderJSXToClientJSX(jsx) {
   if (
@@ -182,7 +222,6 @@ async function renderJSXToClientJSX(jsx) {
   } else if (jsx != null && typeof jsx === "object") {
     if (jsx.$$typeof === Symbol.for("react.element")) {
       if (jsx.type === Symbol.for("react.fragment")) {
-        //         // handle fragments
         return renderJSXToClientJSX(jsx.props.children);
       } else if (typeof jsx.type === "string") {
         return {
@@ -213,42 +252,3 @@ async function renderJSXToClientJSX(jsx) {
     throw new Error("Not implemented");
   }
 }
-
-// async function renderJSXToClientJSX(jsx) {
-//   if (
-//     typeof jsx === "string" ||
-//     typeof jsx === "number" ||
-//     typeof jsx === "boolean" ||
-//     jsx == null
-//   ) {
-//     return jsx;
-//   } else if (Array.isArray(jsx)) {
-//     return Promise.all(jsx.map((child) => renderJSXToClientJSX(child)));
-//   } else if (jsx != null && typeof jsx === "object") {
-//     if (jsx.$$typeof === Symbol.for("react.element")) {
-//       if (jsx.type === Symbol.for("react.fragment")) {
-//         // handle fragments
-//         return renderJSXToClientJSX(jsx.props.children);
-//       } else if (typeof jsx.type === "string") {
-//         return {
-//           ...jsx,
-//           props: await renderJSXToClientJSX(jsx.props),
-//         };
-//       } else if (typeof jsx.type === "function") {
-//         const Component = jsx.type;
-//         const props = jsx.props;
-//         const returnedJsx = await Component(props); // this is where server fetching happens
-//         return renderJSXToClientJSX(returnedJsx);
-//       } else throw new Error("Not implemented.");
-//     } else {
-//       return Object.fromEntries(
-//         await Promise.all(
-//           Object.entries(jsx).map(async ([propName, value]) => [
-//             propName,
-//             await renderJSXToClientJSX(value),
-//           ])
-//         )
-//       );
-//     }
-//   } else throw new Error("Not implemented");
-// }
