@@ -80,7 +80,6 @@ async function Post({ slug }) {
             ),
           }}
         />
-        {/* <ReactMarkdown>{content}</ReactMarkdown> */}
       </article>
     </section>
   );
