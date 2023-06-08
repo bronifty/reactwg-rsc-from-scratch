@@ -1,3 +1,4 @@
+import React from "react";
 import { createServer } from "http";
 import { readFile, readdir } from "fs/promises";
 import sanitizeFilename from "sanitize-filename";
@@ -25,7 +26,11 @@ function Router({ url }) {
     const postSlug = sanitizeFilename(url.pathname.slice(1));
     page = <BlogPostPage postSlug={postSlug} />;
   }
-  return <BlogLayout>{page}</BlogLayout>;
+  return (
+    <BlogLayout>
+      {<React.Fragment key={url.pathname}>{page}</React.Fragment>}
+    </BlogLayout>
+  );
 }
 
 async function BlogIndexPage() {
