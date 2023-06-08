@@ -115,8 +115,8 @@ async function Comments({ slug }) {
       <ul>
         {comments
           ? comments.map((comment) => (
-              <li key={comment.id}>
-                <p>{comment.content}</p>
+              <li key={comment.slug}>
+                <p>{comment.comment}</p>
                 <p>
                   <i>by {comment.author}</i>
                 </p>

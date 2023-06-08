@@ -2,10 +2,10 @@ import { writeFile, readFile } from "node:fs/promises";
 // import { Buffer } from "node:buffer";
 // {
 //   "commentId": 1,
-//   "content": "This is a comment",
+//   "comment": "This is a comment",
 //   "author": "John Doe",
 //   "timestamp": 1234567890,
-//   "postId": "cat-api"
+//   "slug": "cat-api"
 // }
 
 async function commentWriter({ slug, comment, author }) {
@@ -20,8 +20,8 @@ async function commentWriter({ slug, comment, author }) {
     ? comments[comments.length - 1].commentId + 1
     : 1;
   const newComment = {
-    postId: slug,
-    content: comment,
+    slug,
+    comment,
     author,
     commentId,
     timestamp: Date.now(),
