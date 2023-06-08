@@ -54,12 +54,13 @@ window.addEventListener(
       return;
     }
     e.preventDefault();
+    // clear the form
 
     console.log("in the window submit interceptor; e.target: ", e.target);
     let form = e.target;
     let slug = form.elements["slug"].value;
     let comment = form.elements["comment"].value;
-
+    e.target.elements["comment"].value = "";
     console.log(slug, comment);
 
     // Prevent the browser from sending the form and reloading the page.
