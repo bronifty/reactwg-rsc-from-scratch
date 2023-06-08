@@ -18,11 +18,6 @@ async function commentWriter({ slug, comment, author }) {
   // console.log("comments: ", comments, "newComment: ", newComment);
   comments.push(newComment);
   await writeFile(`./comments/comments.json`, JSON.stringify(comments), "utf8");
-  // await writeFile(
-  //   `./comments/comments-${slug}.json`,
-  //   JSON.stringify(comments),
-  //   "utf8"
-  // );
 }
 
 function parseUrlEncodedData(data) {
