@@ -89,7 +89,7 @@ window.addEventListener(
     //   "in the window submit interceptor; testing passing the event along to navigate to see if there is something short circuiting "
     // );
     // After submitting the form, you might want to navigate to the post.
-    setTimeout(() => navigate(slug), 1000);
+    setTimeout(() => navigate(slug), 2000);
     // navigate(slug);
   },
   true
