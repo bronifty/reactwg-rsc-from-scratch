@@ -51,6 +51,9 @@ window.addEventListener(
 
     // Prevent the browser from sending the form and reloading the page.
     e.preventDefault();
+    const href = e.target.getAttribute("href");
+    const url = new URL(href, window.location.origin);
+    url.searchParams.delete("jsx");
 
     const form = e.target;
     const formData = new FormData(form);
@@ -61,20 +64,18 @@ window.addEventListener(
       "in the window submit interceptor; slug: ",
       slug,
       "comment: ",
-      comment,
-      "formData: ",
-      formData
+      comment
     );
 
     // Now you can handle the form data on the client side.
     // For example, you can send it to the server with fetch:
-    const response = await fetch("/comments", {
+    const response = await fetch(`/comments?slug=${slug}`, {
       method: "POST",
-      body: comment,
+      body: formData,
     });
 
     // After submitting the form, you might want to navigate to the post.
-    navigate(slug);
+    // navigate(slug);
   },
   true
 );

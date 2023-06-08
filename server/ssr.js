@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { renderToString } from "react-dom/server";
-import handleComment from "../utils/comment.js";
+import handleComment from "../utils/comment.cjs";
 // import commentWriter from "../utils/commentWriter.js";
 
 // This is a server to host CDN distributed resources like static files and SSR.
@@ -15,22 +15,23 @@ createServer(async (req, res) => {
       res.end(content);
       return;
     }
-    if (url.pathname === "/comments") {
-      if (req.method === "POST") {
-        await handleComment(req, res, url);
-        res.end();
-        return;
-      }
-      // if (req.method === "GET") {
-      //   const content = await readFile("./comments.json", "utf8");
-      //   res.setHeader("Content-Type", "application/json");
-      //   res.end(content);
-      //   return;
-      // }
-    }
-    if (url.searchParams.has("slug") || url.pathname === "/comments") {
-      await handleComment(req, res, url);
+    // if (url.pathname === "/comments") {
+    //   console.log("yes hello this is /comments; i have been fetched");
+    //   await handleComment(req, res, url);
+    //   res.end();
+    //   // if (req.method === "POST") {
+
+    //   // }
+    //   // if (req.method === "GET") {
+    //   //   const content = await readFile("./comments.json", "utf8");
+    //   //   res.setHeader("Content-Type", "application/json");
+    //   //   res.end(content);
+    //   //   return;
+    //   // }
+    // }
+    if (url.searchParams.has("slug")) {
       console.log("url.searchParams.has('slug')");
+      await handleComment(req, res, url);
       res.end();
     }
     const response = await fetch("http://127.0.0.1:8081" + url.pathname);

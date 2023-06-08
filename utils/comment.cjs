@@ -1,4 +1,6 @@
-import { writeFile, readFile } from "node:fs/promises";
+const { writeFile, readFile } = require("node:fs/promises");
+// import formidable from "https://esm.sh/formidable";
+const formidable = require("formidable");
 
 async function commentWriter({ slug, comment, author }) {
   const commentsJSON = await readFile(`./comments/comments.json`, "utf8");
@@ -33,6 +35,36 @@ function parseUrlEncodedData(data) {
 }
 
 async function handleComment(req, res, url) {
+  const form = new formidable.IncomingForm();
+  let slug;
+  let comment;
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error(err);
+      res.statusCode = 500;
+      res.end();
+      return;
+    }
+
+    slug = fields.slug;
+    comment = fields.comment;
+    console.log(
+      "in handleComment formidable form.parse; slug: ",
+      slug,
+      "comment: ",
+      comment
+    );
+    await commentWriter({
+      slug,
+      comment,
+      author: "John Doe",
+    });
+    res.end("Comment added successfully.");
+  });
+}
+
+async function handleCommentServer(req, res, url) {
+  console.log("in handleComment, url: ", url);
   const slug = url.searchParams.get("slug");
   // console.log("in handleComment: slug: ", slug, "url: ", url);
   let body = "";
@@ -41,7 +73,7 @@ async function handleComment(req, res, url) {
   });
   req.on("end", async () => {
     const formData = parseUrlEncodedData(body);
-    const comment = formData.comment;
+    const comment = formData.get("comment");
     console.log("body: ", body, "comment: ", comment);
     await commentWriter({
       slug,
@@ -54,4 +86,5 @@ async function handleComment(req, res, url) {
   return;
 }
 
-export default handleComment;
+module.exports = handleComment;
+// export default handleComment;
