@@ -9,15 +9,29 @@ import handleComment from "../utils/comment.js";
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.searchParams.has("slug")) {
-      await handleComment(req, res, url);
-    }
-
     if (url.pathname === "/client.js") {
       const content = await readFile("./client.js", "utf8");
       res.setHeader("Content-Type", "text/javascript");
       res.end(content);
       return;
+    }
+    if (url.pathname === "/comments") {
+      if (req.method === "POST") {
+        await handleComment(req, res, url);
+        res.end();
+        return;
+      }
+      // if (req.method === "GET") {
+      //   const content = await readFile("./comments.json", "utf8");
+      //   res.setHeader("Content-Type", "application/json");
+      //   res.end(content);
+      //   return;
+      // }
+    }
+    if (url.searchParams.has("slug") || url.pathname === "/comments") {
+      await handleComment(req, res, url);
+      console.log("url.searchParams.has('slug')");
+      res.end();
     }
     const response = await fetch("http://127.0.0.1:8081" + url.pathname);
     if (!response.ok) {

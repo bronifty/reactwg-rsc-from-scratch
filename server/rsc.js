@@ -87,13 +87,39 @@ async function Post({ slug }) {
 
 async function CommentForm({ slug }) {
   return (
-    <form id="{{slug}}-form" action={`/comments?slug=${slug}`} method="post">
+    <form id={`${slug}-form`} action={`/comments?slug=${slug}`} method="post">
       <input hidden readOnly name="slug" value={slug} />
       <textarea name="comment" required></textarea>
       <button type="submit">Post Comment</button>
     </form>
   );
 }
+
+// async function CommentForm({ slug }) {
+//   return (
+//     <form
+//       id={slug + "-form"}
+//       onSubmit={function onSubmitHandler(e) {
+//         e.preventDefault();
+//         const comment = e.target.elements.comment.value;
+//         console.log("in the Comment form; comment: ", comment);
+//         // const comments = await readFile(`./comments/${slug}.json`, "utf8");
+//         // const commentId = comments.length
+//         //   ? comments[comments.length - 1].commentId + 1
+//         //   : 1;
+//         const newComment = { commentId, text: comment, timestamp: Date.now() };
+//         // comments.push(newComment);
+//         // await writeFile(
+//         //   `./comments/${slug}.json`,
+//         //   JSON.stringify(comments),
+//         //   "utf8"
+//         // );
+//       }}>
+//       <textarea name="comment" required />
+//       <button type="submit">Post Comment</button>
+//     </form>
+//   );
+// }
 
 async function Comments({ slug }) {
   let comments;

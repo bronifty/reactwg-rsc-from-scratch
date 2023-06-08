@@ -14,6 +14,7 @@ function getInitialClientJSX() {
 async function navigate(pathname) {
   currentPathname = pathname;
   const clientJSX = await fetchClientJSX(pathname);
+  // console.log("clientJSX", clientJSX);
   if (pathname === currentPathname) {
     root.render(clientJSX);
   }
@@ -40,35 +41,47 @@ function parseJSX(key, value) {
   }
 }
 
-// async function navigate(pathname) {
-//   currentPathname = pathname;
-//   const response = await fetch(pathname + "?jsx");
-//   const jsonString = await response.text();
-//   if (pathname === currentPathname) {
-//     alert(jsonString);
-//   }
-// }
+window.addEventListener(
+  "submit",
+  async (e) => {
+    // Only listen to form submissions.
+    if (e.target.tagName !== "FORM") {
+      return;
+    }
 
-// async function navigate(pathname) {
-//   currentPathname = pathname;
-//   // Fetch HTML for the route we're navigating to.
-//   const response = await fetch(pathname);
-//   const html = await response.text();
+    // Prevent the browser from sending the form and reloading the page.
+    e.preventDefault();
 
-//   if (pathname === currentPathname) {
-//     // Get the part of HTML inside the <body> tag.
-//     const bodyStartIndex = html.indexOf("<body>") + "<body>".length;
-//     const bodyEndIndex = html.lastIndexOf("</body>");
-//     const bodyHTML = html.slice(bodyStartIndex, bodyEndIndex);
+    const form = e.target;
+    const formData = new FormData(form);
+    const slug = formData.get("slug");
 
-//     // Replace the content on the page.
-//     document.body.innerHTML = bodyHTML;
-//   }
-// }
+    const comment = formData.get("comment");
+    console.log(
+      "in the window submit interceptor; slug: ",
+      slug,
+      "comment: ",
+      comment,
+      "formData: ",
+      formData
+    );
+
+    // Now you can handle the form data on the client side.
+    // For example, you can send it to the server with fetch:
+    const response = await fetch("/comments", {
+      method: "POST",
+      body: comment,
+    });
+
+    // After submitting the form, you might want to navigate to the post.
+    navigate(slug);
+  },
+  true
+);
 
 window.addEventListener(
   "click",
-  (e) => {
+  async (e) => {
     // Only listen to link clicks.
     if (e.target.tagName !== "A") {
       return;
@@ -103,6 +116,23 @@ function getRandomColor() {
     color += letters[Math.floor(Math.random() * 16)];
   }
   return color;
+}
+
+// turn the onSubmit handler into a function
+async function handleComment(e) {
+  //         const comment = e.target.elements.comment.value;
+  //         const comments = await readFile(`./comments/${slug}.json`, "utf8");
+  //         const commentId = comments.length
+  //           ? comments[comments.length - 1].commentId + 1
+  //           : 1;
+  //         const newComment = { commentId, text: comment, timestamp: Date.now() };
+  //         comments.push(newComment);
+  //         await writeFile(
+  //           `./comments/${slug}.json`,
+  //           JSON.stringify(comments),
+  //           "utf8"
+  //         );
+  //       }}>
 }
 
 // async function CommentForm({ slug }) {
