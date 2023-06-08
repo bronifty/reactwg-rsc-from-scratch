@@ -13,6 +13,7 @@ function getInitialClientJSX() {
 
 async function navigate(pathname) {
   currentPathname = pathname;
+  console.log("calling navigate with pathname: ", pathname);
   const clientJSX = await fetchClientJSX(pathname);
   // console.log("clientJSX", clientJSX);
   if (pathname === currentPathname) {
@@ -22,9 +23,13 @@ async function navigate(pathname) {
 }
 
 async function fetchClientJSX(pathname) {
-  const response = await fetch(pathname + "?jsx");
+  console.log("in fetchClientJSX with pathname: ", pathname);
+  let jsxPathname = pathname + "?jsx";
+  console.log("about to fetch jsxPathname: ", jsxPathname);
+  const response = await fetch(jsxPathname);
   const clientJSXString = await response.text();
   const clientJSX = JSON.parse(clientJSXString, parseJSX);
+  console.log("retvrned with clientJSX");
   return clientJSX;
 }
 
@@ -48,6 +53,7 @@ window.addEventListener(
     if (e.target.tagName !== "FORM") {
       return;
     }
+    console.log("in the window submit interceptor; e.target: ", e.target);
 
     // Prevent the browser from sending the form and reloading the page.
     e.preventDefault();
@@ -69,13 +75,18 @@ window.addEventListener(
 
     // Now you can handle the form data on the client side.
     // For example, you can send it to the server with fetch:
-    const response = await fetch(`/comments?slug=${slug}`, {
-      method: "POST",
-      body: formData,
-    });
-
+    // const response = await fetch(`/comments?slug=${slug}`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/x-www-form-urlencoded",
+    //   },
+    //   body: formData,
+    // });
+    console.log(
+      "in the window submit interceptor; testing passing the event along to navigate to see if there is something short circuiting "
+    );
     // After submitting the form, you might want to navigate to the post.
-    // navigate(slug);
+    navigate(slug);
   },
   true
 );

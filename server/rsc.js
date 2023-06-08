@@ -6,8 +6,9 @@ import readDirectory from "../utils/readdir.js";
 // This is a server to host data-local resources like databases and RSC.
 
 createServer(async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  console.log("in rsc server, incoming req.url made into a URL: ", url);
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
     await sendJSX(res, <Router url={url} />);
   } catch (err) {
     console.error(err);
@@ -87,7 +88,7 @@ async function Post({ slug }) {
 
 async function CommentForm({ slug }) {
   return (
-    <form id={`${slug}-form`} action={`/comments?slug=${slug}`} method="post">
+    <form id={`${slug}-form`} action={`/${slug}`} method="post">
       <input hidden readOnly name="slug" value={slug} />
       <textarea name="comment" required></textarea>
       <button type="submit">Post Comment</button>

@@ -2,38 +2,40 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { renderToString } from "react-dom/server";
 import handleComment from "../utils/comment.cjs";
-// import commentWriter from "../utils/commentWriter.js";
-
-// This is a server to host CDN distributed resources like static files and SSR.
+// import handleComment from "../utils/comment.js";
 
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.pathname === "/client.js") {
+      console.log("url.pathname === '/client.js'", url);
+
       const content = await readFile("./client.js", "utf8");
       res.setHeader("Content-Type", "text/javascript");
       res.end(content);
       return;
     }
-    // if (url.pathname === "/comments") {
-    //   console.log("yes hello this is /comments; i have been fetched");
-    //   await handleComment(req, res, url);
-    //   res.end();
-    //   // if (req.method === "POST") {
-
-    //   // }
-    //   // if (req.method === "GET") {
-    //   //   const content = await readFile("./comments.json", "utf8");
-    //   //   res.setHeader("Content-Type", "application/json");
-    //   //   res.end(content);
-    //   //   return;
-    //   // }
-    // }
-    if (url.searchParams.has("slug")) {
-      console.log("url.searchParams.has('slug')");
+    if (req.method === "POST") {
+      console.log("req.method === 'POST'", url);
       await handleComment(req, res, url);
-      res.end();
+      res.end("ok");
+      return;
     }
+    // if (url.searchParams.has("slug")) {
+    //   console.log("url.searchParams.has('slug')");
+    //   await handleComment(req, res, url);
+    //   // res.end();
+    //   console.log("url ", url);
+    //   // Assuming url is the URL object
+    //   // url.pathname = url.searchParams.get("slug");
+    //   // url.searchParams.append("jsx", "");
+    //   res.end();
+    // }
+    const slug = url.pathname;
+    console.log(
+      "in ssr server about to make a call to rsc with url.pathname as slug: ",
+      slug
+    );
     const response = await fetch("http://127.0.0.1:8081" + url.pathname);
     if (!response.ok) {
       res.statusCode = response.status;
@@ -41,7 +43,11 @@ createServer(async (req, res) => {
       return;
     }
     const clientJSXString = await response.text();
+    console.log("back in ssr server with response from rsc of clientJSXString");
     if (url.searchParams.has("jsx")) {
+      console.log(
+        "in ssr server with response from rsc of clientJSXString; url.searchParams.has('jsx')"
+      );
       res.setHeader("Content-Type", "application/json");
       res.end(clientJSXString);
     } else {
