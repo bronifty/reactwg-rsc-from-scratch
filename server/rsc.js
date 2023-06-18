@@ -237,6 +237,7 @@ async function renderJSXToClientJSX(jsx) {
         const Component = jsx.type;
         const props = jsx.props;
         const returnedJsx = await Component(props); // this is where server fetching happens
+        console.log("returnedJsx", returnedJsx)
         return renderJSXToClientJSX(returnedJsx);
       } else {
         console.log("jsx fragment", jsx);

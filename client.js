@@ -15,7 +15,7 @@ async function navigate(pathname) {
   currentPathname = pathname;
   console.log("calling navigate with pathname: ", pathname);
   const clientJSX = await fetchClientJSX(pathname);
-  // console.log("clientJSX", clientJSX);
+  console.log("clientJSX", clientJSX);
   if (pathname === currentPathname) {
     root.render(clientJSX);
   }
@@ -29,7 +29,7 @@ async function fetchClientJSX(pathname) {
   const response = await fetch(jsxPathname);
   const clientJSXString = await response.text();
   const clientJSX = JSON.parse(clientJSXString, parseJSX);
-  console.log("retvrned with clientJSX");
+  console.log("retvrned with clientJSX", clientJSX);
   return clientJSX;
 }
 

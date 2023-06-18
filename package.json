@@ -17,7 +17,8 @@
   "scripts": {
     "start": "concurrently \"npm run start:ssr\" \"npm run start:rsc\"",
     "start:rsc": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/rsc.js",
-    "start:ssr": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/ssr.js"
+    "start:ssr": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/ssr.js",
+    "build": "babel ./server --out-dir ./dist --extensions \".js,.jsx\" --copy-files"
   },
   "devDependencies": {
     "@types/node": "^17.0.21"

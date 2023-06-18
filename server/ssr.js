@@ -43,7 +43,10 @@ createServer(async (req, res) => {
       return;
     }
     const clientJSXString = await response.text();
-    console.log("back in ssr server with response from rsc of clientJSXString");
+    // console.log(
+    //   "back in ssr server with response from rsc of clientJSXString; clientJSXString: ",
+    //   clientJSXString
+    // );
     if (url.searchParams.has("jsx")) {
       console.log(
         "in ssr server with response from rsc of clientJSXString; url.searchParams.has('jsx')"
@@ -52,6 +55,10 @@ createServer(async (req, res) => {
       res.end(clientJSXString);
     } else {
       const clientJSX = JSON.parse(clientJSXString, parseJSX);
+      console.log(
+        "back in ssr server with response from rsc of clientJSX; clientJSX: ",
+        clientJSX
+      );
       let html = renderToString(clientJSX);
       html += `<script>window.__INITIAL_CLIENT_JSX_STRING__ = `;
       html += JSON.stringify(clientJSXString).replace(/</g, "\\u003c");
