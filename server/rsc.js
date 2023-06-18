@@ -1,6 +1,6 @@
 import React from "react";
-import { createServer } from "http";
-import { readFile, readdir } from "fs/promises";
+import { createServer } from "node:http";
+import { readFile, readdir } from "node:fs/promises";
 import sanitizeFilename from "sanitize-filename";
 import ReactMarkdown from "react-markdown";
 import readDirectory from "../utils/readdir.js";
@@ -237,7 +237,7 @@ async function renderJSXToClientJSX(jsx) {
         const Component = jsx.type;
         const props = jsx.props;
         const returnedJsx = await Component(props); // this is where server fetching happens
-        console.log("returnedJsx", returnedJsx)
+        console.log("returnedJsx", returnedJsx);
         return renderJSXToClientJSX(returnedJsx);
       } else {
         console.log("jsx fragment", jsx);
