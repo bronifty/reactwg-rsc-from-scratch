@@ -3,7 +3,6 @@
   "type": "module",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.21.8",
     "@babel/plugin-transform-react-jsx": "^7.21.5",
     "concurrently": "^8.1.0",
     "escape-html": "^1.0.3",
@@ -17,9 +16,16 @@
   "scripts": {
     "start": "concurrently \"npm run start:ssr\" \"npm run start:rsc\"",
     "start:rsc": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/rsc.js",
-    "start:ssr": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/ssr.js"
+    "start:ssr": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/ssr.js",
+    "build": "babel ./server -d lib --extensions \".js,.jsx\" --copy-files",
+    "start:babel:ssr": "node ./lib/ssr.js",
+    "start:babel:rsc": "node ./lib/rsc.js",
+    "start:babel": "concurrently \"npm run start:babel:ssr\" \"npm run start:babel:rsc\""
   },
   "devDependencies": {
+    "@babel/cli": "^7.22.5",
+    "@babel/core": "^7.22.5",
+    "@babel/preset-react": "^7.22.5",
     "@types/node": "^17.0.21"
   }
 }
