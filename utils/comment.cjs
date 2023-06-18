@@ -2,6 +2,30 @@ const { writeFile, readFile } = require("node:fs/promises");
 // import formidable from "https://esm.sh/formidable";
 const formidable = require("formidable");
 
+// [{"slug":"cat-api","comment":"cat comment","author":"John Doe","commentId":1,"timestamp":1686221998058}]
+interface Comment {
+  slug: string;
+  comment: string;
+  author: string;
+  commentId: number;
+  timestamp: number;
+}
+
+const comments: Comment[] = [
+  {
+    slug: "cat-api",
+    comment: "cat comment",
+    author: "John Doe",
+    commentId: 1,
+    timestamp: 1686221998058,
+  },
+];
+
+// Example usage
+comments.forEach((comment) => {
+  console.log(comment.author + " said: " + comment.comment);
+});
+
 async function commentWriter({ slug, comment, author }) {
   let commentsJSON = [];
   commentsJSON = await readFile(`./comments/comments.json`, "utf8");

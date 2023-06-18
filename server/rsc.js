@@ -1,28 +1,65 @@
 import React from "react";
-import { createServer } from "node:http";
+// import { createServer } from "node:http";
 import { readFile, readdir } from "node:fs/promises";
 import sanitizeFilename from "sanitize-filename";
 import ReactMarkdown from "react-markdown";
 import readDirectory from "../utils/readdir.js";
 // This is a server to host data-local resources like databases and RSC.
 
-createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
+
+async function handler(req) {
+  const url = new URL(req.url);
+  // if the route is /next-app return the response from the next-app
+  // else return the response from the hello-world app
+  // if (url.pathname === "/next-app") {
+  //   url.protocol = "http:";
+  //   url.hostname = "localhost";
+  //   url.port = "3000";
+  //   return await fetch(url.href, {
+  //     headers: req.headers,
+  //     method: req.method,
+  //     body: req.body,
+  //   });
+  // } else {
+  //   return new Response("Hello World!");
+  // }
   console.log("in rsc server, incoming req.url made into a URL: ", url);
   try {
-    await sendJSX(res, <Router url={url} />);
+    const body = await sendJSX(<Router url={url} />);
+    return new Response(body, {
+      headers: { "content-type": "application/json; charset=utf-8" },
+    });
   } catch (err) {
     console.error(err);
-    res.statusCode = err.statusCode ?? 500;
-    res.end();
+    // res.statusCode = err.statusCode ?? 500;
+    // res.end();
+    return new Response("Error 500");
   }
-}).listen(8081);
+}
+
+serve(handler, { port: 8081 });
+
+// createServer(async (req, res) => {
+//   const url = new URL(req.url, `http://${req.headers.host}`);
+//   console.log("in rsc server, incoming req.url made into a URL: ", url);
+//   try {
+//     await sendJSX(res, <Router url={url} />);
+//   } catch (err) {
+//     console.error(err);
+//     res.statusCode = err.statusCode ?? 500;
+//     res.end();
+//   }
+// }).listen(8081);
 // determines jsx
 function Router({ url }) {
   let page;
   if (url.pathname === "/") {
+    console.log("in rsc server Router; url.pathname is /");
     page = <BlogIndexPage />;
   } else {
+    console.log("in rsc server Router; url.pathname is not /");
+
     const postSlug = sanitizeFilename(url.pathname.slice(1));
     page = <BlogPostPage postSlug={postSlug} />;
   }
@@ -191,11 +228,10 @@ function Footer({ author }) {
   );
 }
 
-async function sendJSX(res, jsx) {
+async function sendJSX(jsx) {
   const clientJSX = await renderJSXToClientJSX(jsx);
   const clientJSXString = JSON.stringify(clientJSX, stringifyJSX);
-  res.setHeader("Content-Type", "application/json");
-  res.end(clientJSXString);
+  return clientJSXString;
 }
 
 function throwNotFound(cause) {
@@ -237,7 +273,7 @@ async function renderJSXToClientJSX(jsx) {
         const Component = jsx.type;
         const props = jsx.props;
         const returnedJsx = await Component(props); // this is where server fetching happens
-        console.log("returnedJsx", returnedJsx);
+        // console.log("returnedJsx", returnedJsx);
         return renderJSXToClientJSX(returnedJsx);
       } else {
         console.log("jsx fragment", jsx);

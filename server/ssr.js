@@ -1,36 +1,48 @@
-import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { renderToString } from "react-dom/server";
-import handleComment from "../utils/comment.cjs";
-// import handleComment from "../utils/comment.js";
+import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
+import parseMultipartFormData from "../utils/form.js";
 
-createServer(async (req, res) => {
+// reviver function
+function parseJSX(key, value) {
+  if (value === "$RE") {
+    return Symbol.for("react.element");
+  } else if (typeof value === "string" && value.startsWith("$$")) {
+    return value.slice(1);
+  } else {
+    return value;
+  }
+}
+
+async function handler(req) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.pathname === "/client.js") {
       console.log("url.pathname === '/client.js'", url);
-
       const content = await readFile("./client.js", "utf8");
-      res.setHeader("Content-Type", "text/javascript");
-      res.end(content);
-      return;
+      return new Response(content, {
+        headers: {
+          "Content-Type": "text/javascript",
+        },
+      });
     }
     if (req.method === "POST") {
       console.log("req.method === 'POST'", url);
-      await handleComment(req, res, url);
-      res.end("ok");
-      return;
+      let body = await req.text();
+      let contentType = req.headers.get("content-type");
+      let boundary = contentType.split("; ")[1].split("=")[1];
+      // parse the form data
+      let parsedBody = parseMultipartFormData(body, boundary);
+      let slug = parsedBody.slug;
+      let comment = parsedBody.comment;
+      console.log(
+        "Received POST request with slug: " + slug + " and comment: " + comment
+      );
+      return new Response(
+        "Received POST request with slug: " + slug + " and comment: " + comment
+      );
     }
-    // if (url.searchParams.has("slug")) {
-    //   console.log("url.searchParams.has('slug')");
-    //   await handleComment(req, res, url);
-    //   // res.end();
-    //   console.log("url ", url);
-    //   // Assuming url is the URL object
-    //   // url.pathname = url.searchParams.get("slug");
-    //   // url.searchParams.append("jsx", "");
-    //   res.end();
-    // }
+
     const slug = url.pathname;
     console.log(
       "in ssr server about to make a call to rsc with url.pathname as slug: ",
@@ -38,27 +50,23 @@ createServer(async (req, res) => {
     );
     const response = await fetch("http://127.0.0.1:8081" + url.pathname);
     if (!response.ok) {
-      res.statusCode = response.status;
-      res.end();
-      return;
+      return new Response("error from rsc server");
     }
     const clientJSXString = await response.text();
-    // console.log(
-    //   "back in ssr server with response from rsc of clientJSXString; clientJSXString: ",
-    //   clientJSXString
-    // );
+    console.log("back in ssr server with response from rsc of clientJSXString");
     if (url.searchParams.has("jsx")) {
       console.log(
         "in ssr server with response from rsc of clientJSXString; url.searchParams.has('jsx')"
       );
-      res.setHeader("Content-Type", "application/json");
-      res.end(clientJSXString);
+      // res.setHeader("Content-Type", "application/json");
+      // res.end(clientJSXString);
+      return new Response(clientJSXString, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
     } else {
-      const clientJSX = JSON.parse(clientJSXString, parseJSX);
-      console.log(
-        "back in ssr server with response from rsc of clientJSX; clientJSX: ",
-        clientJSX
-      );
+      const clientJSX = await JSON.parse(clientJSXString, parseJSX);
       let html = renderToString(clientJSX);
       html += `<script>window.__INITIAL_CLIENT_JSX_STRING__ = `;
       html += JSON.stringify(clientJSXString).replace(/</g, "\\u003c");
@@ -92,22 +100,20 @@ createServer(async (req, res) => {
         }
     </style>
       `;
-      res.setHeader("Content-Type", "text/html");
-      res.end(html);
+      // res.setHeader("Content-Type", "text/html");
+      // res.end(html);
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html",
+        },
+      });
     }
   } catch (err) {
     console.error(err);
-    res.statusCode = err.statusCode ?? 500;
-    res.end();
-  }
-}).listen(8080);
-// reviver function
-function parseJSX(key, value) {
-  if (value === "$RE") {
-    return Symbol.for("react.element");
-  } else if (typeof value === "string" && value.startsWith("$$")) {
-    return value.slice(1);
-  } else {
-    return value;
+    // res.statusCode = err.statusCode ?? 500;
+    // res.end();
+    return new Response("error");
   }
 }
+
+serve(handler, { port: 8080 });

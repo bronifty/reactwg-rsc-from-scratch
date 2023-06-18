@@ -17,10 +17,15 @@
     "start": "concurrently \"npm run start:ssr\" \"npm run start:rsc\"",
     "start:rsc": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/rsc.js",
     "start:ssr": "nodemon -- --experimental-loader ./node-jsx-loader.js ./server/ssr.js",
-    "build": "babel ./server -d lib --extensions \".js,.jsx\" --copy-files",
+    "build": "babel server -d lib",
     "start:babel:ssr": "node ./lib/ssr.js",
     "start:babel:rsc": "node ./lib/rsc.js",
-    "start:babel": "concurrently \"npm run start:babel:ssr\" \"npm run start:babel:rsc\""
+    "start:babel": "concurrently \"npm run start:babel:ssr\" \"npm run start:babel:rsc\"",
+    "deno:rsc": "deno run --allow-net --allow-read --allow-write --allow-env --unstable ./server/rsc.ts",
+    "deno:ssr": "deno run --allow-net --allow-read --allow-write --allow-env --unstable ./server/ssr.ts",
+    "deno:build:rsc": "deno run --allow-net --allow-read --allow-write --allow-env --unstable ./lib/rsc.js",
+    "deno:build:ssr": "deno run --allow-net --allow-read --allow-write --allow-env --unstable ./lib/ssr.js",
+    "deno:start": "concurrently \"npm run deno:build:rsc\" \"npm run deno:build:ssr\""
   },
   "devDependencies": {
     "@babel/cli": "^7.22.5",
