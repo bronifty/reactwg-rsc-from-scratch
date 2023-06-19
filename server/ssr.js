@@ -2,17 +2,7 @@ import { readFile } from "node:fs/promises";
 import { renderToString } from "react-dom/server";
 import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
 import parseMultipartFormData from "../utils/form.js";
-
-// reviver function
-function parseJSX(key, value) {
-  if (value === "$RE") {
-    return Symbol.for("react.element");
-  } else if (typeof value === "string" && value.startsWith("$$")) {
-    return value.slice(1);
-  } else {
-    return value;
-  }
-}
+import { addComment, getCommentsBySlug } from "./db2.js";
 
 async function handler(req) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -35,9 +25,24 @@ async function handler(req) {
       let parsedBody = parseMultipartFormData(body, boundary);
       let slug = parsedBody.slug;
       let comment = parsedBody.comment;
-      console.log(
-        "Received POST request with slug: " + slug + " and comment: " + comment
-      );
+      // let id = crypto.randomUUID();
+      // let commentId = Math.random() * 100000000000000000;
+      // [{"slug":"cat-api","comment":"cat comment","author":"John Doe","commentId":1,"timestamp":1686221998058}]
+      // async function addComment({ slug, comment }) {
+      //   const data = {
+      //     slug,
+      //     comment,
+      //     author: "anonymous",
+      //     id: crypto.randomUUID(),
+      //     timestamp: new Date().toISOString(),
+      //   };
+      //   await kv.set(["comments", slug, data.id], data);
+      // }
+
+      await addComment({ slug, comment });
+      const comments = await getCommentsBySlug({ slug });
+      console.log("comments: ", comments);
+
       return new Response(
         "Received POST request with slug: " + slug + " and comment: " + comment
       );
@@ -117,3 +122,14 @@ async function handler(req) {
 }
 
 serve(handler, { port: 8080 });
+
+// reviver function
+function parseJSX(key, value) {
+  if (value === "$RE") {
+    return Symbol.for("react.element");
+  } else if (typeof value === "string" && value.startsWith("$$")) {
+    return value.slice(1);
+  } else {
+    return value;
+  }
+}

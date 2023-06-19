@@ -20,17 +20,17 @@ export default function parseMultipartFormData(body, boundary) {
   return result;
 }
 
-let body = `------WebKitFormBoundarydEwf8S2BzSpBrhK4
-Content-Disposition: form-data; name="slug"
+// let body = `------WebKitFormBoundarydEwf8S2BzSpBrhK4
+// Content-Disposition: form-data; name="slug"
 
-test
-------WebKitFormBoundarydEwf8S2BzSpBrhK4
-Content-Disposition: form-data; name="comment"
+// test
+// ------WebKitFormBoundarydEwf8S2BzSpBrhK4
+// Content-Disposition: form-data; name="comment"
 
-abc
-------WebKitFormBoundarydEwf8S2BzSpBrhK4--`;
+// abc
+// ------WebKitFormBoundarydEwf8S2BzSpBrhK4--`;
 
-let boundary = "WebKitFormBoundarydEwf8S2BzSpBrhK4";
-let parsedBody = parseMultipartFormData(body, boundary);
+// let boundary = "WebKitFormBoundarydEwf8S2BzSpBrhK4";
+// let parsedBody = parseMultipartFormData(body, boundary);
 
-console.log(parsedBody);
+// console.log(parsedBody);
